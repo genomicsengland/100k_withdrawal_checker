@@ -5,6 +5,9 @@
 rm(list=ls(all=T))
 options(scipen = 200)
 
+# set working directory
+setwd('/home/cdt_deploy/jenkins_builds/daily-data-checks/no-to-consent-checker')
+
 #--Bring in required packages
 library(methods)
 library(slackr)
@@ -17,8 +20,6 @@ slackr_setup(channel="@mwalker",
             incoming_webhook_url="https://hooks.slack.com/services/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",
             api_token = 'xoxp-3407199151-239224420817-256880855665-736d7287e5d7fb343361045f87ca54c5')
 
-# set working directory
-setwd('/home/cdt_deploy/jenkins_build/daily-data-checks/no-to-consent-checker')
 
 #-- for during testing, to reset prev dataframe to empty 
 #NOTE: REMOVE ONCE AUTOMATING
@@ -26,7 +27,7 @@ setwd('/home/cdt_deploy/jenkins_build/daily-data-checks/no-to-consent-checker')
 # saveRDS(curr, "prev/20181100_consent-no.rds")
 
 curDate  <- as.numeric(format(today(), '%Y%m%d%h%s'))
-files  <- list.files(path='./prev/')
+files  <- list.files(path='prev/')
 lastData  <- files[1] 
 
 
