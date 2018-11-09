@@ -18,7 +18,7 @@ slackr_setup(channel="@mwalker",
             api_token = 'xoxp-3407199151-239224420817-256880855665-736d7287e5d7fb343361045f87ca54c5')
 
 # set working directory
-setwd('/home/cdt_deploy/jenkins_build/daily-data-checks/no-to-consent-checker/')
+setwd('/home/cdt_deploy/jenkins_build/daily-data-checks/no-to-consent-checker')
 
 #-- for during testing, to reset prev dataframe to empty 
 #NOTE: REMOVE ONCE AUTOMATING
