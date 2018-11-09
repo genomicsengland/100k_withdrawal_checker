@@ -23,7 +23,7 @@ slackr_setup(channel="@mwalker",
 # saveRDS(curr, "prev/20181100_consent-no.rds")
 
 curDate  <- as.numeric(format(today(), '%Y%m%d'))
-files  <- list.files(path='prev/')
+files  <- list.files(path='./prev/')
 # lastData  <- tail(fileList, n=1) 
 lastData  <- files[1] 
 
@@ -34,10 +34,10 @@ read.consent.nos <- function(){
 		{drv <- dbDriver("PostgreSQL")
 		mis.con <- dbConnect(drv,
 			     dbname = "gel_mi",
-			     # host = "10.1.24.37",
-			     host = "localhost",
-			     # port = 5432,
-			     port = 5440,
+			     host = "10.1.24.37",
+			     # host = "localhost",
+			     port = 5432,
+			     # port = 5440,
 			     user = "mwalker",
 			     password = "password")
 		curr <- dbGetQuery(mis.con, "SELECT DISTINCT participant_id, handling_gmc from cdm.vw_participant WHERE consent_given = 'No'")
