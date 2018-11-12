@@ -26,7 +26,7 @@ slackr_setup(channel="@mwalker",
 # curr = data.frame('participant_id' = character(), 'handling_gmc' = character())
 # saveRDS(curr, "prev/20181100_consent-no.rds")
 
-curDate  <- as.numeric(format(today(), '%Y%m%d%h%s'))
+curDate  <- as.numeric(format(Sys.time(), '%Y%m%d%H%M%S'))
 files  <- list.files(path='prev/')
 lastData  <- files[1] 
 
