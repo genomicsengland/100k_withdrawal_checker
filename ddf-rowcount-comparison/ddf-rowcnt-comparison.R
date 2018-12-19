@@ -19,7 +19,7 @@ library(dplyr)
 library(ascii)
 
 #-- set up / establish slack channel notification
-slackr_setup(channel="slackr-test", 
+slackr_setup(channel="dq-metrics", 
 	     username="WranglerBot"
              incoming_webhook_url="https://hooks.slack.com/services/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",
              api_token = 'xoxp-3407199151-239224420817-256880855665-736d7287e5d7fb343361045f87ca54c5')
