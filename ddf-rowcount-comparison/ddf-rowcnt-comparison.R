@@ -6,9 +6,6 @@
 rm(list=ls(all=T))
 options(scipen = 200)
 
-# set working directory (UNCOMMENT ON SERVER)
-# setwd('/home/cdt_deploy/jenkins_builds/daily-data-checks/ddf-rowcnt-comparison')
-
 #--Bring in required packages
 library(methods)
 library(slackr)
@@ -48,12 +45,16 @@ lab.sample <- dbGetQuery(ddf.con, "SELECT 'cdm.laboratory_sample'::text AS tbl_n
 plated.sample <- dbGetQuery(ddf.con, "SELECT 'cdm.plated_sample'::text AS tbl_name ,count(1) AS cur_tot FROM cdm.plated_sample")
 rd.fam.medrev <- dbGetQuery(ddf.con, "SELECT 'cdm.rare_diseases_family_medical_review'::text AS tbl_name ,count(1) AS cur_tot FROM cdm.rare_diseases_family_medical_review")
 rd.ped.member <- dbGetQuery(ddf.con, "SELECT 'cdm.rare_diseases_pedigree_member'::text AS tbl_name ,count(1) AS cur_tot FROM cdm.rare_diseases_pedigree_member")
+latest.consent  <- dbGetQuery(ddf.con, "SELECT max(date_of_consent::date) FROM cdm.participant  WHERE date_of_consent::date <= now()::date")
+latest.timestamp  <- dbGetQuery(ddf.con, "SELECT max(de_last_updated_datetime::date) FROM cdm.participant")
 
 # disconnect from db 
 dbdisconnectall()
 
 # rowbind results into single dataframe
 cur <- rbind(gel.case, participant, rare.diseases.participant, cancer.participant, consent.form, clinic.sample, lab.sample, plated.sample, rd.fam.medrev, rd.ped.member)
+latest.consent <- latest.consent[1,1]
+latest.timestamp <- latest.timestamp[1,1]
 
 # read in yesterdays row counts
 old  <- readRDS('prev/prev_rowcnt.rds')
@@ -77,4 +78,6 @@ mis.data.checks <- ascii(comp, include.rownames = F, format=c('s', 'd', 'd'), he
 slackr_msg(as_user=F,username='WranglerBot', paste('@here', 
 		'\n Latest MIS data checks (todays row counts against yesterdays):\n'))
 		slackr(mis.data.checks)
+		slackr_msg(as_user=F, username='WranglerBot', paste('\nLatest consent date: `', latest.consent, '`\n'))
+		slackr_msg(as_user=F, username='WranglerBot', paste('Latest _cdm.participant_ update timestamp: `', latest.timestamp, '`\n'))
 		slackr_msg(as_user=F, username='WranglerBot','\n\n:robot_face: _This is an automated message_ :robot_face:')
