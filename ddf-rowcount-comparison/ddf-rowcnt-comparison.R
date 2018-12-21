@@ -78,6 +78,6 @@ mis.data.checks <- ascii(comp, include.rownames = F, format=c('s', 'd', 'd'), he
 slackr_msg(as_user=F,username='WranglerBot', paste('@here', 
 		'\n Latest MIS data checks (todays row counts against yesterdays):\n'))
 		slackr(mis.data.checks)
-		slackr_msg(as_user=F, username='WranglerBot', paste('\nLatest consent date: `', latest.consent, '`\n'))
-		slackr_msg(as_user=F, username='WranglerBot', paste('Latest _cdm.participant_ update timestamp: `', latest.timestamp, '`\n'))
-		slackr_msg(as_user=F, username='WranglerBot','\n\n:robot_face: _This is an automated message_ :robot_face:')
+		slackr_msg(paste('\nLatest consent date: `', latest.consent, '`\n'))
+		slackr_msg(paste('Latest _cdm.participant_ update timestamp: `', latest.timestamp, '`\n'))
+		slackr_msg('\n\n:robot_face: _This is an automated message_ :robot_face:')
