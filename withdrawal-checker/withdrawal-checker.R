@@ -7,6 +7,9 @@ library(slackr)
 library(RPostgreSQL)
 library(wrangleR)
 
+# - set working directory
+setwd('/home/cdt_deploy/jenkins_builds/daily-data-checks/withdrawal-checker')
+
 #--set up slackr info (webhook etc.)
 slackr_setup(channel = "withdrawal-alert",
 	     incoming_webhook_url="https://hooks.slack.com/services/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",
