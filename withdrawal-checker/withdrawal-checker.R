@@ -42,10 +42,10 @@ if(class(withdrawals) == "list" & all(names(withdrawals) == c("current", "previo
 	new.withdrawals <- withdrawals[["current"]][!withdrawals[["current"]] %in% withdrawals[["previous"]]]
 	if(length(new.withdrawals) > 0){
 		ids <- paste(new.withdrawals, collapse = "\n")
-		slackr_msg(paste(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n @here *New withdrawals submitted:*\n", ids))
+		slackr_msg(paste(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n @here *New FULL withdrawals submitted:*\n", ids))
 		saveRDS(withdrawals[["current"]], "withdrawn.rds")
 	} else {
-		slackr_msg(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n It's a no-withdrawals day")
+		slackr_msg(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n It's a no-(full)withdrawals day")
 	} 
 } else {
 	slackr_msg(paste(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n @here *ALERT THE WRANGLERS*, something went wrong:", withdrawals))
