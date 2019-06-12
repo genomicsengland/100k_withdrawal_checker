@@ -23,8 +23,8 @@ read.withdrawals <- function(){
 			     dbname = "gel_mi",
 			     host = "10.1.24.37",
 			     port = 5432,
-			     user = "cdt_user",
-			     password = "Daws0n_H&ll")
+			     user = "sthompson",
+			     password = "password")
 		curr <- dbGetQuery(mis.con, "SELECT participant_id FROM cdm.vw_participant_level_data WHERE withdrawal_option_id='FULL_WITHDRAWAL'")
 		dbdisconnectall()
 		prev <- readRDS("withdrawn.rds")
