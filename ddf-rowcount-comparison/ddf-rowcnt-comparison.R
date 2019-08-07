@@ -13,7 +13,7 @@ library(RPostgreSQL)
 library(wrangleR)
 library(lubridate)
 library(dplyr)
-library(ascii)
+library(knitr)
 
 
 #-- set working directory
@@ -28,9 +28,9 @@ slackr_setup(channel="dq-metrics",
 drv <- dbDriver("PostgreSQL")
 ddf.con <- dbConnect(drv, dbname = "gel_mi",
 			host = "10.1.24.37",
-			# host = "localhost",
+			#-- host = "localhost",
 			port = 5432,
-			# port = 5440,
+			#-- port = 5440,
 			user = "mwalker",
 			password = "password")
 
@@ -72,8 +72,8 @@ curDate <- format(Sys.time(), '%m/%d')
 yesterDate <- format(Sys.time()-days(1), '%m/%d')
 colnames(comp)  <- c('TABLE', paste(curDate, 'TOT'), paste(yesterDate, 'TOT'), 'DIFF')
 
-# turn into ascii table
-mis.data.checks <- ascii(comp, include.rownames = F, format=c('s', 'd', 'd'), header = F)  
+# turn into kable table
+mis.data.checks <- kable(comp, format = 'rst')
 
 slackr_msg(as_user=F,username='WranglerBot', paste('@here', 
 		'\n Latest MIS data checks (todays row counts against yesterdays):\n'))
