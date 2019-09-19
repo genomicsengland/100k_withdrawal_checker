@@ -75,7 +75,7 @@ if(class(withdrawals) == "list" & all(names(withdrawals) == c("current", "previo
 		#-- generate a ticket for each one
 		for(i in new.withdrawals){
 			ticket_link <- create_jira_issue(i)
-			slackr_msg(paste(jira_base_url, ticket_link, sep = '/'))
+			slackr_msg(paste0(jira_base_url, '/browse/', ticket_link))
 		}
 		saveRDS(withdrawals[["current"]], "withdrawn.rds")
 	} else {
