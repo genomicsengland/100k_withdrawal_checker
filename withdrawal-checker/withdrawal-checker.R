@@ -10,10 +10,36 @@ library(wrangleR)
 # - set working directory
 setwd('/home/cdt_deploy/jenkins_builds/daily-data-checks/withdrawal-checker')
 
+#-- get profile
+p <- getprofile(c('slack_api_token', 'ldap', 'mis_con'), file = '.gel_config')
+
 #--set up slackr info (webhook etc.)
 slackr_setup(channel = "withdrawal-alert",
 	     incoming_webhook_url="https://hooks.slack.com/services/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",
-	     api_token ="xoxp-3407199151-80074460915-381114212677-e72d5ed2c785e26df76168b5d9bc92bf")
+	     api_token =p$slack_api_token)
+
+#-- function to create a service desk ticket
+jira_base_url <- 'https://jiraservicedesk.extge.co.uk'
+create_jira_issue <- function(participant_id){
+        require(httr)
+		require(jsonlite)
+        r_url = paste0(jira_base_url, '/rest/api/2/issue')
+		# template structure to create ticket
+		d = list('fields' = list(
+			'project' = list('key' = 'GEL'),
+			'summary' = 'Full Participant Withdrawal',
+			'description' = paste('Full withdrawal for participant', participant_id, 'has been received'),
+			'issuetype' = list('name' = 'Service Request'))
+		)
+        # make the request
+        r = POST(r_url, authenticate(p$ldap$user, p$ldap$password, type = 'basic'), body = d, encode = 'json')
+		# check whether successful
+        if(!http_status(r)$category %in% 'Success'){
+                    stop(paste('Unsuccessful attempt for', r_url, '-', http_status(r)$message))
+        }
+		# return the key of the created ticket
+		return(fromJSON(content(r, 'text'))$key)
+}
 
 #-- read in the list of fully withdrawn participants
 read.withdrawals <- function(){
@@ -21,10 +47,10 @@ read.withdrawals <- function(){
 		{drv <- dbDriver("PostgreSQL")
 		mis.con <- dbConnect(drv,
 			     dbname = "gel_mi",
-			     host = "10.1.24.37",
-			     port = 5432,
-			     user = "sthompson",
-			     password = "password")
+			     host = p$mis_con$host,
+			     port = p$mis_con$port,
+			     user = p$mis_con$user,
+			     password = p$mis_con$password)
 		curr <- dbGetQuery(mis.con, "SELECT participant_id FROM cdm.vw_participant_level_data WHERE withdrawal_option_id='FULL_WITHDRAWAL'")
 		dbdisconnectall()
 		prev <- readRDS("withdrawn.rds")
@@ -38,12 +64,20 @@ read.withdrawals <- function(){
 
 withdrawals <- read.withdrawals()
 
+#-- if we've read the withdrawals ok
 if(class(withdrawals) == "list" & all(names(withdrawals) == c("current", "previous"))){
+	#-- get new withdrawals
 	new.withdrawals <- withdrawals[["current"]][!withdrawals[["current"]] %in% withdrawals[["previous"]]]
 	if(length(new.withdrawals) > 0){
+		#-- post IDs to slack
 		ids <- paste(new.withdrawals, collapse = "\n")
 		slackr_msg(paste(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n @here *New FULL withdrawals submitted:*\n", ids))
 		saveRDS(withdrawals[["current"]], "withdrawn.rds")
+		#-- generate a ticket for each one
+		for(i in new.withdrawals){
+			ticket_link <- create_jira_issue(i)
+			slackr_msg(paste(jira_base_url, ticket_link, sep = '/'))
+		}
 	} else {
 		slackr_msg(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n It's a no-(full)withdrawals day")
 	} 
