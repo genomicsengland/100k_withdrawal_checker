@@ -72,12 +72,12 @@ if(class(withdrawals) == "list" & all(names(withdrawals) == c("current", "previo
 		#-- post IDs to slack
 		ids <- paste(new.withdrawals, collapse = "\n")
 		slackr_msg(paste(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n @here *New FULL withdrawals submitted:*\n", ids))
-		saveRDS(withdrawals[["current"]], "withdrawn.rds")
 		#-- generate a ticket for each one
 		for(i in new.withdrawals){
 			ticket_link <- create_jira_issue(i)
 			slackr_msg(paste(jira_base_url, ticket_link, sep = '/'))
 		}
+		saveRDS(withdrawals[["current"]], "withdrawn.rds")
 	} else {
 		slackr_msg(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n It's a no-(full)withdrawals day")
 	} 
