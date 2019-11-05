@@ -11,12 +11,11 @@ library(wrangleR)
 setwd('/home/cdt_deploy/jenkins_builds/daily-data-checks/withdrawal-checker')
 
 #-- get profile
-p <- getprofile(c('slack_api_token', 'ldap', 'mis_con'), file = '.gel_config')
+p <- getprofile(c('cdt_bot_slack_api_token', 'ldap', 'mis_con'), file = '.gel_config')
 
 #--set up slackr info (webhook etc.)
 slackr_setup(channel = "withdrawal-alert",
-	     incoming_webhook_url="https://hooks.slack.com/services/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",
-	     api_token =p$slack_api_token)
+	     api_token =p$cdt_bot_slack_api_token)
 
 #-- function to create a service desk ticket
 jira_base_url <- 'https://jiraservicedesk.extge.co.uk'
