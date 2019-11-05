@@ -21,8 +21,7 @@ setwd('/home/cdt_deploy/jenkins_builds/daily-data-checks/ddf-rowcount-comparison
 
 #-- set up / establish slack channel notification
 slackr_setup(channel="dq-metrics", 
-             incoming_webhook_url="https://hooks.slack.com/services/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",
-             api_token = 'xoxp-3407199151-239224420817-256880855665-736d7287e5d7fb343361045f87ca54c5')
+             api_token = 'xoxb-3407199151-808783344883-lLXz0LggqZ99KTZCRCmfHLFf')
 
 #Connect to db
 drv <- dbDriver("PostgreSQL")
@@ -75,7 +74,7 @@ colnames(comp)  <- c('TABLE', paste(curDate, 'TOT'), paste(yesterDate, 'TOT'), '
 # turn into kable table
 mis.data.checks <- kable(comp, format = 'rst')
 
-slackr_msg(as_user=F,username='WranglerBot', paste('@here', 
+slackr_msg(paste('@here', 
 		'\n Latest MIS data checks (todays row counts against yesterdays):\n'))
 		slackr(mis.data.checks)
 		slackr_msg(paste('\nLatest consent date: `', latest.consent, '`\n'))
