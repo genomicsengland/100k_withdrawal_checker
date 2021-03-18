@@ -4,7 +4,7 @@ options(stringsAsFactors = FALSE,
 	scipen = 200)
 library(methods)
 library(slackr)
-library(RPostgreSQL)
+library(DBI)
 library(wrangleR)
 
 # - set working directory
@@ -14,7 +14,7 @@ setwd('/home/cdt_deploy/jenkins_builds/daily-data-checks/withdrawal-checker')
 p <- getprofile(c('cdt_bot_slack_api_token', 'ldap', 'mis_con'), file = '.gel_config')
 
 #--set up slackr info (webhook etc.), config file at ~/.slackr
-slackr_setup(channel = "#withdrawal-alert")
+slackr_setup(config_file = '/home/cdt_deploy/.slackr', channel = "#withdrawal-alert")
 
 #-- function to create a service desk ticket
 jira_base_url <- 'https://jiraservicedesk.extge.co.uk'
@@ -42,15 +42,13 @@ create_jira_issue <- function(participant_id){
 #-- read in the list of fully withdrawn participants
 read.withdrawals <- function(){
 	tryCatch(
-		{drv <- dbDriver("PostgreSQL")
-		mis.con <- dbConnect(drv,
+		{ mis.con <- dbConnect(RPostgres::Postgres(),
 			     dbname = "gel_mi",
 			     host = p$mis_con$host,
 			     port = p$mis_con$port,
 			     user = p$mis_con$user,
 			     password = p$mis_con$password)
 		curr <- dbGetQuery(mis.con, "SELECT participant_id FROM cdm.vw_participant_level_data WHERE withdrawal_option_id='FULL_WITHDRAWAL'")
-		dbdisconnectall()
 		prev <- readRDS("withdrawn.rds")
 		list("current" = curr[[1]], "previous" = prev)
 		},
@@ -69,16 +67,16 @@ if(class(withdrawals) == "list" & all(names(withdrawals) == c("current", "previo
 	if(length(new.withdrawals) > 0){
 		#-- post IDs to slack
 		ids <- paste(new.withdrawals, collapse = "\n")
-		slackr(paste(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n @here *New FULL withdrawals submitted:*\n", ids))
+		slackr(channel = "#withdrawal-alert", paste(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n @here *New FULL withdrawals submitted:*\n", ids))
 		#-- generate a ticket for each one
 		for(i in new.withdrawals){
 			ticket_link <- create_jira_issue(i)
-			slackr(paste0(jira_base_url, '/browse/', ticket_link))
+			slackr(channel = "#withdrawal-alert", paste0(jira_base_url, '/browse/', ticket_link))
 		}
 		saveRDS(withdrawals[["current"]], "withdrawn.rds")
 	} else {
-		slackr(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n It's a no-(full)withdrawals day")
+		slackr(channel = "#withdrawal-alert", ":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n It's a no-(full)withdrawals day")
 	} 
 } else {
-	slackr(paste(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n @here *ALERT THE WRANGLERS*, something went wrong:", withdrawals))
+	slackr(channel = "#withdrawal-alert", paste(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n @here *ALERT THE WRANGLERS*, something went wrong:", withdrawals))
 }
