@@ -13,9 +13,8 @@ setwd('/home/cdt_deploy/jenkins_builds/daily-data-checks/withdrawal-checker')
 #-- get profile
 p <- getprofile(c('cdt_bot_slack_api_token', 'ldap', 'mis_con'), file = '.gel_config')
 
-#--set up slackr info (webhook etc.)
-slackr_setup(channel = "withdrawal-alert",
-	     api_token =p$cdt_bot_slack_api_token)
+#--set up slackr info (webhook etc.), config file at ~/.slackr
+slackr_setup(channel = "#withdrawal-alert")
 
 #-- function to create a service desk ticket
 jira_base_url <- 'https://jiraservicedesk.extge.co.uk'
@@ -70,16 +69,16 @@ if(class(withdrawals) == "list" & all(names(withdrawals) == c("current", "previo
 	if(length(new.withdrawals) > 0){
 		#-- post IDs to slack
 		ids <- paste(new.withdrawals, collapse = "\n")
-		slackr_msg(paste(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n @here *New FULL withdrawals submitted:*\n", ids))
+		slackr(paste(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n @here *New FULL withdrawals submitted:*\n", ids))
 		#-- generate a ticket for each one
 		for(i in new.withdrawals){
 			ticket_link <- create_jira_issue(i)
-			slackr_msg(paste0(jira_base_url, '/browse/', ticket_link))
+			slackr(paste0(jira_base_url, '/browse/', ticket_link))
 		}
 		saveRDS(withdrawals[["current"]], "withdrawn.rds")
 	} else {
-		slackr_msg(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n It's a no-(full)withdrawals day")
+		slackr(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n It's a no-(full)withdrawals day")
 	} 
 } else {
-	slackr_msg(paste(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n @here *ALERT THE WRANGLERS*, something went wrong:", withdrawals))
+	slackr(paste(":robot_face: _THIS IS AN AUTOMATED MESSAGE_ :robot_face:\n @here *ALERT THE WRANGLERS*, something went wrong:", withdrawals))
 }
