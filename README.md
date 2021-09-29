@@ -1,14 +1,6 @@
-# Daily Data Checks
+# 100k Withdrawal Checker
 
-## Synopsis
+This script checks for any new withdrawals in the relevant table in the MIS database and, if there are any, posts a message to Slack and creates a JIRA ticket.
+This is the trigger for a variety of teams to process that withdrawal.
 
-This set of scripts run daily checks of MI data, compares against previous checks and publishes the difference (i.e. new changes in data) to specific slack channels. The aim of this is to proactively check the clinical data according to specific criteria and notify the data quality team where action is required.
-
-## Checks in place
-
-  * Full withdrawal
-  * 'No' to consent
-
-## Connections
-
-These scripts require ssh connections to the CDT MIS db copy found on `10.1.24.39`
+The script requires R4.0.3 and also a Slack Bot who has been invited to the relevant Slack channel.
