@@ -2,3 +2,4 @@
 *.png
 *.csv
 .env
+.slackr
