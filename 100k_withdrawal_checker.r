@@ -16,9 +16,7 @@ slack_channel_id <- Sys.getenv("SLACK_CHANNEL_ID")
 create_jira_issue <- function(participant_id) {
     require(httr)
     require(jsonlite)
-
     r_url <- paste0(jira_base_url, "/rest/api/2/issue")
-
     # template structure to create ticket
     d = list("fields" = list(
         "project" = list("key" = "GEL"),
@@ -30,7 +28,6 @@ create_jira_issue <- function(participant_id) {
         ),
         "issuetype" = list("name" = "Service Request"))
     )
-
     # make the request
     if (generate_tickets == TRUE) {
         r <- POST(r_url,
@@ -39,18 +36,15 @@ create_jira_issue <- function(participant_id) {
                 Sys.getenv("JIRA_PWD"),
                 type = "basic"
             ), body = d, encode = "json")
-
         # check whether successful
         if (!http_status(r)$category %in% "Success") {
             stop(paste("Unsuccessful attempt for",
                     r_url, "-", http_status(r)$message))
         }
-
         # return the key of the created ticket
         return(fromJSON(content(r, "text"))$key)
-
     } else {
-        return("Not generating tickets")
+        return(paste("not_generating_tickets_", participant_id))
     }
 }
 
@@ -62,7 +56,9 @@ send_slack_message <- function(msg) {
     d = list(
              channel = slack_channel_id,
              token = Sys.getenv("SLACK_BOT_TOKEN"),
-             text = msg
+             blocks = paste0('[{"type": "section", "text":',
+                             '{"type": "mrkdwn", "text": "',
+                             msg, '"}}]')
     )
     if (send_slack_messages == TRUE) {
         r <- POST(r_url, body = d)
@@ -106,38 +102,31 @@ withdrawals <- read_withdrawals()
 # if we've read the withdrawals ok
 if (class(withdrawals) == "list" &
    all(names(withdrawals) == c("current", "previous"))) {
-
     # get new_withdrawals
     new_withdrawals <- withdrawals[["current"]][!withdrawals[["current"]]
                                                 %in% withdrawals[["previous"]]]
-
     if (length(new_withdrawals) > 0) {
-
         # post IDs to slack
         ids <- paste(new_withdrawals, collapse = "\n")
         send_slack_message(paste(
-            "_THIS IS AN AUTOMATED MESSAGE_\n
-            *New FULL withdrawals submitted:*\n",
-            ids)
+            ":ROBOT_FACE:_THIS IS AN AUTOMATED MESSAGE_:ROBOT_FACE:\n",
+            "*New FULL withdrawals submitted:*\n")
         )
-
         # generate a ticket for each one
         for (i in new_withdrawals) {
-            ticket_link <- create_jira_issue(i)
-            send_slack_message(paste0(jira_base_url, '/browse/', ticket_link))
+            ticket_link <- paste0(jira_base_url, '/browse/', create_jira_issue(i))
+            send_slack_message(paste0("<", ticket_link, "|", i, ">"))
         }
-
         # write out the current withdrawals
         saveRDS(withdrawals[["current"]], "withdrawn.rds")
-
     } else {
-
-        send_slack_message("_THIS IS AN AUTOMATED MESSAGE_\n
-               It's a no-(full)withdrawals day")
+        send_slack_message(
+            paste(":ROBOT_FACE:_THIS IS AN AUTOMATED MESSAGE_:ROBOT_FACE:\n",
+                  "It's a no-(full)withdrawals day :thumbsup:"))
     }
-
 } else {
-    send_slack_message(paste("_THIS IS AN AUTOMATED MESSAGE_\n
-                 *ALERT THE WRANGLERS*, something went wrong:",
-                 withdrawals))
+    send_slack_message(
+        paste(":ROBOT_FACE:_THIS IS AN AUTOMATED MESSAGE_:ROBOT_FACE:\n",
+              ":alert:*ALERT THE WRANGLERS*, something went wrong:alert:\n",
+              withdrawals))
 }
