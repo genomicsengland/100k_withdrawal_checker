@@ -26,4 +26,5 @@ Relevant Slack channel IDs are:
 
 ```
 simon-test - GNJ36MQNR
+withdrawal-alert - GBJQA3R99
 ```
