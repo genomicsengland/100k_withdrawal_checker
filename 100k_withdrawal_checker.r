@@ -3,18 +3,14 @@ rm(list = objects())
 options(stringsAsFactors = FALSE,
     scipen = 200)
 library(methods)
-library(slackr)
 library(DBI)
 library(dotenv)
 
 #set up environment
-slackr_setup(config_file = ".slackr")
-
 jira_base_url <- Sys.getenv("JIRA_BASE_URL")
 generate_tickets <- Sys.getenv("GENERATE_TICKETS") == 1
 send_slack_messages <- Sys.getenv("SEND_SLACK_MESSAGES") == 1
-slack_channel <- Sys.getenv("SLACK_CHANNEL")
-
+slack_channel_id <- Sys.getenv("SLACK_CHANNEL_ID")
 
 # function to create a service desk ticket
 create_jira_issue <- function(participant_id) {
@@ -45,7 +41,7 @@ create_jira_issue <- function(participant_id) {
             ), body = d, encode = "json")
 
         # check whether successful
-        if(!http_status(r)$category %in% "Success"){
+        if (!http_status(r)$category %in% "Success") {
             stop(paste("Unsuccessful attempt for",
                     r_url, "-", http_status(r)$message))
         }
@@ -59,39 +55,53 @@ create_jira_issue <- function(participant_id) {
 }
 
 # function to send a message via slackr
-send_slack_message <- function(msg, channel=slack_channel) {
+send_slack_message <- function(msg) {
+    require(httr)
+    require(jsonlite)
+    r_url <- "https://slack.com/api/chat.postMessage"
+    d = list(
+             channel = slack_channel_id,
+             token = Sys.getenv("SLACK_BOT_TOKEN"),
+             text = msg
+    )
     if (send_slack_messages == TRUE) {
-        slackr(channel = channel, msg)
+        r <- POST(r_url, body = d)
+        # check whether successful
+        if (!http_status(r)$category %in% "Success") {
+            stop(paste("Unsuccessful attempt for",
+                    r_url, "-", http_status(r)$message))
+        }
+        return(fromJSON(content(r, "text")))
     } else {
-        print(paste("channel: ", channel, "msg: ", msg))
+        print(paste("channel_id: ", slack_channel_id, "msg: ", msg))
     }
 }
 
 # read in the list of fully withdrawn participants
 read_withdrawals <- function() {
-    tryCatch( {
+    tryCatch({
             mis_con <- dbConnect(RPostgres::Postgres(),
                  dbname = "gel_mi",
                  host = Sys.getenv("MIS_DB_HOST"),
                  port = Sys.getenv("MIS_DB_PORT"),
-                 user = Sys,getenv("MIS_DB_USER"),
+                 user = Sys.getenv("MIS_DB_USER"),
                  password = Sys.getenv("MIS_DB_PWD")
             )
             curr <- dbGetQuery(mis_con,
                 "select participant_id
                 from cdm.vw_participant_level_data
-                where withdrawal_option_id='full_withdrawal';"
+                where withdrawal_option_id='FULL_WITHDRAWAL';"
             )
             prev <- readRDS("withdrawn.rds")
             list("current" = curr[[1]], "previous" = prev)
         },
-        error=function(err){
+        error = function(err) {
             return(err[[1]])
         }
     )
 }
 
-withdrawals <- read.withdrawals()
+withdrawals <- read_withdrawals()
 
 # if we've read the withdrawals ok
 if (class(withdrawals) == "list" &
@@ -113,7 +123,7 @@ if (class(withdrawals) == "list" &
 
         # generate a ticket for each one
         for (i in new_withdrawals) {
-            #ticket_link <- create_jira_issue(i)
+            ticket_link <- create_jira_issue(i)
             send_slack_message(paste0(jira_base_url, '/browse/', ticket_link))
         }
 
