@@ -92,7 +92,7 @@ read_withdrawals <- function() {
             list("current" = curr[[1]], "previous" = prev)
         },
         error = function(err) {
-            return(err[[1]])
+            return(paste(gsub("[\n\t\"]", " ", err[[1]]), collapse = " "))
         }
     )
 }
