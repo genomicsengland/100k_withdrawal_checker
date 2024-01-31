@@ -76,17 +76,22 @@ send_slack_message <- function(msg) {
 # read in the list of fully withdrawn participants
 read_withdrawals <- function() {
     tryCatch({
-            mis_con <- dbConnect(RPostgres::Postgres(),
-                 dbname = "gel_mi",
-                 host = Sys.getenv("MIS_DB_HOST"),
-                 port = Sys.getenv("MIS_DB_PORT"),
-                 user = Sys.getenv("MIS_DB_USER"),
-                 password = Sys.getenv("MIS_DB_PWD")
+            dams_con <- dbConnect(RPostgres::Postgres(),
+                 dbname = "labkey",
+                 host = Sys.getenv("DAMS_DB_HOST"),
+                 port = Sys.getenv("DAMS_DB_PORT"),
+                 user = Sys.getenv("DAMS_DB_USER"),
+                 password = Sys.getenv("DAMS_DB_PWD")
             )
-            curr <- dbGetQuery(mis_con,
-                "select participant_id
-                from cdm.vw_participant_level_data
-                where withdrawal_option_id='FULL_WITHDRAWAL';"
+            curr <- dbGetQuery(dams_con,
+                "select gc.participant_identifiers_id as participant_id
+                from gelcancer.cancer_withdrawal gc
+                where withdrawal_option_id ilike 'full_withdrawal'
+                union
+                select rd.participant_identifiers_id as participant_id
+                from rarediseases.rare_diseases_withdrawal rd
+                where withdrawal_option_id ilike 'full_withdrawal'
+                ;"
             )
             prev <- readRDS("withdrawn.rds")
             list("current" = curr[[1]], "previous" = prev)
